@@ -1,6 +1,7 @@
 package main
 
 import (
+	"blockchain-sample/database"
 	"fmt"
 	"os"
 
@@ -38,7 +39,7 @@ func txnAddCMD() *cobra.Command {
 			value, _ := cmd.Flags().GetUint(flagValue)
 
 			fromAcc := database.NewAccount(from)
-			toAcc := databse.NewAccount(to)
+			toAcc := database.NewAccount(to)
 
 			txn := database.NewTxn(fromAcc, toAcc, value, "")
 
@@ -55,7 +56,7 @@ func txnAddCMD() *cobra.Command {
 				os.Exit(1)
 			}
 
-			err := state.Persist()
+			err = state.Persist()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -64,10 +65,10 @@ func txnAddCMD() *cobra.Command {
 			fmt.Println("Txn added successfully to nefoli")
 		},
 	}
-	cmd.Flags().String(flagFrom, "", "From what account to send tokens")
+	cmd.Flags().String(flagFrom, "", "Sender account")
 	cmd.MarkFlagRequired(flagFrom)
 
-	cmd.Flags().String(flagTo, "", "To what account to send tokens")
+	cmd.Flags().String(flagTo, "", "Reciever account")
 	cmd.MarkFlagRequired(flagTo)
 
 	cmd.Flags().Uint(flagValue, 0, "How many tokens to send")
