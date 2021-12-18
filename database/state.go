@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // State stores the current state of blockchain
 // It stores the balances of all individuals,
 // a list of all transactions and a pointer to dbFile
 type State struct {
-	Balances   map[Account]uint
-	txnMempool []Txn
-	dbFile     *os.File
+	Balances        map[Account]uint
+	txnMempool      []Txn
+	dbFile          *os.File
+	latestBlockHash Hash
 }
 
 func NewStateFromDisk() (*State, error) {
@@ -25,8 +27,7 @@ func NewStateFromDisk() (*State, error) {
 	}
 
 	// forge the filepath and load data
-	genesisFilePath := filepath.Join(cwd, "database", "genesis.json")
-	gen, err := loadGenesis(genesisFilePath)
+	gen, err := loadGenesis(filepath.Join(cwd, "database", "genesis.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +39,13 @@ func NewStateFromDisk() (*State, error) {
 	}
 
 	// load txns from txn.db to update the blockchain
-	txnDbPath := filepath.Join(cwd, "database", "txn.db")
-	f, err := os.OpenFile(txnDbPath, os.O_APPEND|os.O_RDWR, 0600)
+	f, err := os.OpenFile(filepath.Join(cwd, "database", "block.db"), os.O_APPEND|os.O_RDWR, 0600)
 	if err != nil {
 		return nil, err
 	}
 
 	scanner := bufio.NewScanner(f)
-	state := &State{balances, make([]Txn, 0), f}
+	state := &State{balances, make([]Txn, 0), f, Hash{}}
 
 	// iterate over the txns
 	for scanner.Scan() {
@@ -53,52 +53,55 @@ func NewStateFromDisk() (*State, error) {
 			return nil, err
 		}
 
-		// loading json encoded txns into struct
-		var txn Txn
-		json.Unmarshal(scanner.Bytes(), &txn)
-		if err := state.apply(txn); err != nil {
+		blockFsJson := scanner.Bytes()
+		var blockFs BlockFs
+		err = json.Unmarshal(blockFsJson, &blockFs)
+		if err != nil {
 			return nil, err
 		}
+
+		if err := state.applyBlock(blockFs.Value); err != nil {
+			return nil, err
+		}
+
+		state.latestBlockHash = blockFs.Key
 	}
 
 	return state, nil
 }
 
-// Add adds a txn to the current state
-func (s *State) Add(txn Txn) error {
+// Add adds a block to the current state
+func (s *State) AddBlock(b Block) error {
+	for _, txn := range b.Txns {
+		fmt.Println(txn)
+		if err := s.AddTxn(txn); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// applyBlock adds all the txns in the block to the state
+func (s *State) applyBlock(b Block) error {
+	for _, txn := range b.Txns {
+		if err := s.apply(txn); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AddTxn processes the given txn
+func (s *State) AddTxn(txn Txn) error {
 	if err := s.apply(txn); err != nil {
 		return err
 	}
+
 	s.txnMempool = append(s.txnMempool, txn)
 	return nil
 }
 
-// Persist adds the transactions to disk
-func (s *State) Persist() error {
-	// creating a temp mempool as current mempool will be modified
-	tempMemPool := make([]Txn, len(s.txnMempool))
-	copy(tempMemPool, s.txnMempool)
-
-	// loop over the mempool
-	// add txn to db
-	// and remove txn from mempool
-	for i := 0; i < len(tempMemPool); i++ {
-		txnJson, err := json.Marshal(tempMemPool[i])
-		if err != nil {
-			return err
-		}
-
-		if _, err := s.dbFile.Write(append(txnJson, '\n')); err != nil {
-			return err
-		}
-
-		s.txnMempool = s.txnMempool[1:]
-	}
-	return nil
-}
-
-// apply validates the txn against the current State
-// and makes changes to the State
+// apply validates the txn and makes changes to the State
 func (s *State) apply(txn Txn) error {
 	// check is txn is block reward
 	if txn.IsReward() {
@@ -117,6 +120,39 @@ func (s *State) apply(txn Txn) error {
 	return nil
 }
 
-func (s *State) Close() {
-	s.dbFile.Close()
+// Persist adds the transactions to the block
+func (s *State) Persist() (Hash, error) {
+	block := NewBlock(s.latestBlockHash, uint64(time.Now().Unix()), s.txnMempool)
+	blockHash, err := block.Hash()
+	if err != nil {
+		return Hash{}, err
+	}
+
+	blockFs := BlockFs{blockHash, block}
+
+	blockFsJson, err := json.Marshal(blockFs)
+	if err != nil {
+		return Hash{}, err
+	}
+
+	fmt.Printf("Persisting new block to disk:\n%s\n", blockFsJson)
+
+	if _, err = s.dbFile.Write(append(blockFsJson, '\n')); err != nil {
+		return Hash{}, err
+	}
+
+	s.latestBlockHash = blockHash
+	s.txnMempool = []Txn{}
+
+	return s.latestBlockHash, nil
+}
+
+// Latest Snapshot returns the latest snapshot of the current state
+func (s *State) LatestBlockHash() Hash {
+	return s.latestBlockHash
+}
+
+// Close closes the db file
+func (s *State) Close() error {
+	return s.dbFile.Close()
 }

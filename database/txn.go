@@ -23,5 +23,5 @@ func NewTxn(from Account, to Account, value uint, data string) Txn {
 
 // IsReward() checks if the txn is a reward
 func (t Txn) IsReward() bool {
-	return t.Data == "Reward"
+	return t.Data == "reward"
 }
