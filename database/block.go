@@ -17,6 +17,8 @@ func (h *Hash) UnmarshalText(data []byte) error {
 	return err
 }
 
+// Block header stores parent block metadata
+// []Txn stores tsns in the new block
 type Block struct {
 	Header BlockHeader `json:"header"`
 	Txns   []Txn       `json:"payload"`

@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var flagDataDir = "dataDir"
+
 func main() {
 	var paisaCMD = &cobra.Command{
 		Use:   "paisa",
@@ -17,6 +19,7 @@ func main() {
 	paisaCMD.AddCommand(versionCMD)
 	paisaCMD.AddCommand(balancesCMD())
 	paisaCMD.AddCommand(txnCMD())
+	paisaCMD.AddCommand(runCmd())
 
 	err := paisaCMD.Execute()
 	if err != nil {
@@ -27,4 +30,9 @@ func main() {
 
 func incorrectUsageErr() error {
 	return fmt.Errorf("incorrect usage")
+}
+
+func addDefaultRequiredFlags(cmd *cobra.Command) {
+	cmd.Flags().String(flagDataDir, "", "absolute path where all data is stored")
+	cmd.MarkFlagRequired(flagDataDir)
 }

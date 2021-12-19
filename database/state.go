@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -19,15 +18,15 @@ type State struct {
 	latestBlockHash Hash
 }
 
-func NewStateFromDisk() (*State, error) {
+func NewStateFromDisk(path string) (*State, error) {
 	// get current working directory
-	cwd, err := os.Getwd()
+	err := initDataDirIfNotExists(path)
 	if err != nil {
 		return nil, err
 	}
 
 	// forge the filepath and load data
-	gen, err := loadGenesis(filepath.Join(cwd, "database", "genesis.json"))
+	gen, err := loadGenesis(getGenesisJsonFilePath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +38,7 @@ func NewStateFromDisk() (*State, error) {
 	}
 
 	// load txns from txn.db to update the blockchain
-	f, err := os.OpenFile(filepath.Join(cwd, "database", "block.db"), os.O_APPEND|os.O_RDWR, 0600)
+	f, err := os.OpenFile(getBlocksDbFilePath(path), os.O_APPEND|os.O_RDWR, 0600)
 	if err != nil {
 		return nil, err
 	}

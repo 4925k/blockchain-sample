@@ -37,19 +37,15 @@ func txnAddCMD() *cobra.Command {
 		Use:   "add",
 		Short: "Adds new txn to database",
 		Run: func(cmd *cobra.Command, args []string) {
+			dataDir, _ := cmd.Flags().GetString(flagDataDir)
 			from, _ := cmd.Flags().GetString(flagFrom)
 			to, _ := cmd.Flags().GetString(flagTo)
 			value, _ := cmd.Flags().GetUint(flagValue)
 			data, _ := cmd.Flags().GetString(flagData)
 
-			txn := database.NewTxn(
-				database.NewAccount(from),
-				database.NewAccount(to),
-				value,
-				data,
-			)
+			txn := database.NewTxn(database.NewAccount(from), database.NewAccount(to), value, data)
 
-			state, err := database.NewStateFromDisk()
+			state, err := database.NewStateFromDisk(dataDir)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -71,6 +67,8 @@ func txnAddCMD() *cobra.Command {
 			fmt.Println("Txn persisted successfully to nefoli")
 		},
 	}
+	addDefaultRequiredFlags(cmd)
+
 	cmd.Flags().String(flagFrom, "", "Sender account")
 	cmd.MarkFlagRequired(flagFrom)
 

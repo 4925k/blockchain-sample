@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-
-	state, err := database.NewStateFromDisk()
+	cwd, _ := os.Getwd()
+	state, err := database.NewStateFromDisk(cwd)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

@@ -19,25 +19,31 @@ func balancesCMD() *cobra.Command {
 		},
 	}
 
-	balancesCMD.AddCommand(balancesListCMD)
+	balancesCMD.AddCommand(balancesListCMD())
 
 	return balancesCMD
 }
 
-var balancesListCMD = &cobra.Command{
-	Use:   "list",
-	Short: "Lists all balances",
-	Run: func(cmd *cobra.Command, args []string) {
-		state, err := database.NewStateFromDisk()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		defer state.Close()
+func balancesListCMD() *cobra.Command {
+	var balancesListCMD = &cobra.Command{
+		Use:   "list",
+		Short: "Lists all balances",
+		Run: func(cmd *cobra.Command, args []string) {
+			dataDir, _ := cmd.Flags().GetString(flagDataDir)
+			state, err := database.NewStateFromDisk(dataDir)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			defer state.Close()
 
-		fmt.Printf("Accounts Balances at %x:\n", state.LatestBlockHash())
-		for account, balance := range state.Balances {
-			fmt.Printf("%s: %d\n", account, balance)
-		}
-	},
+			fmt.Printf("Accounts Balances at %x:\n", state.LatestBlockHash())
+			for account, balance := range state.Balances {
+				fmt.Printf("%s: %d\n", account, balance)
+			}
+		},
+	}
+
+	addDefaultRequiredFlags(balancesListCMD)
+	return balancesListCMD
 }
