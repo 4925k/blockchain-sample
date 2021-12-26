@@ -16,6 +16,7 @@ func main() {
 		Run:   func(cmd *cobra.Command, args []string) {},
 	}
 
+	paisaCMD.AddCommand(migrateCMD())
 	paisaCMD.AddCommand(versionCMD)
 	paisaCMD.AddCommand(balancesCMD())
 	paisaCMD.AddCommand(txnCMD())

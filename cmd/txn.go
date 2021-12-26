@@ -52,7 +52,7 @@ func txnAddCMD() *cobra.Command {
 			}
 			defer state.Close()
 
-			err = state.AddTxn(txn)
+			err = database.ApplyTxn(txn, state)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

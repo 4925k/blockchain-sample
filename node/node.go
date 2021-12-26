@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 var httpPort = 8080
@@ -27,7 +28,7 @@ type TxnAddReq struct {
 }
 
 type TxnAddRes struct {
-	hash database.Hash
+	Hash database.Hash `json:"hash"`
 }
 
 func Run(path string) error {
@@ -66,18 +67,16 @@ func txnAddHandler(w http.ResponseWriter, r *http.Request, state *database.State
 		Value: req.Value,
 		Data:  req.Data}
 
-	err = state.AddTxn(txn)
+	block := database.NewBlock(
+		state.LatestBlockHash(),
+		state.NextBlockNumber(),
+		uint64(time.Now().Unix()),
+		[]database.Txn{txn},
+	)
+	hash, err := state.AddBlock(block)
 	if err != nil {
 		writeErrRes(w, err)
-		return
 	}
-
-	hash, err := state.Persist()
-	if err != nil {
-		writeErrRes(w, err)
-		return
-	}
-
 	writeRes(w, TxnAddRes{hash})
 }
 
@@ -93,7 +92,6 @@ func writeRes(w http.ResponseWriter, content interface{}) {
 	if err != nil {
 		writeErrRes(w, err)
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(contentJson)
