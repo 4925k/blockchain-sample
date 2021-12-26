@@ -14,10 +14,11 @@ func runCmd() *cobra.Command {
 		Short: "Launches the nefoli node and its HTTP API",
 		Run: func(cmd *cobra.Command, args []string) {
 			dataDir, _ := cmd.Flags().GetString(flagDataDir)
+			port, _ := cmd.Flags().GetUint64(flagPort)
 
-			fmt.Println("Launching nefole node and its HTTP API")
-
-			err := node.Run(dataDir)
+			bootstrap := node.NewPeerNode("40.71.208.186", 8080, true, true)
+			n := node.New(dataDir, port, *bootstrap)
+			err := n.Run()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -25,6 +26,7 @@ func runCmd() *cobra.Command {
 		},
 	}
 	addDefaultRequiredFlags(runCMD)
+	runCMD.Flags().Uint64(flagPort, node.DefaultHttpPort, "port to run the node on")
 
 	return runCMD
 }

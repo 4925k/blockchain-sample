@@ -8,6 +8,7 @@ import (
 )
 
 var flagDataDir = "dataDir"
+var flagPort = "port"
 
 func main() {
 	var paisaCMD = &cobra.Command{
@@ -16,11 +17,11 @@ func main() {
 		Run:   func(cmd *cobra.Command, args []string) {},
 	}
 
-	paisaCMD.AddCommand(migrateCMD())
-	paisaCMD.AddCommand(versionCMD)
-	paisaCMD.AddCommand(balancesCMD())
-	paisaCMD.AddCommand(txnCMD())
 	paisaCMD.AddCommand(runCmd())
+	paisaCMD.AddCommand(txnCMD())
+	paisaCMD.AddCommand(versionCMD)
+	paisaCMD.AddCommand(migrateCMD())
+	paisaCMD.AddCommand(balancesCMD())
 
 	err := paisaCMD.Execute()
 	if err != nil {
