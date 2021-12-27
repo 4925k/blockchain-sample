@@ -7,8 +7,12 @@ import (
 	"net/http"
 )
 
-const DefaultHttpPort = 8080
-const endpointStatus = "/node/status"
+const (
+	DefaultHttpPort               = 8080
+	endpointStatus                = "/node/status"
+	endpointSync                  = "/node/sync"
+	endpointSyncQueryKeyFromBlock = "fromBlock"
+)
 
 type Node struct {
 	dataDir    string
@@ -67,6 +71,9 @@ func (n *Node) Run() error {
 	})
 	http.HandleFunc(endpointStatus, func(w http.ResponseWriter, r *http.Request) {
 		statusHandler(w, r, n)
+	})
+	http.HandleFunc(endpointSync, func(w http.ResponseWriter, r *http.Request) {
+		syncHandler(w, r, n.dataDir)
 	})
 	return http.ListenAndServe(fmt.Sprintf(":%d", n.port), nil)
 

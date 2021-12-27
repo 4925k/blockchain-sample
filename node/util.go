@@ -31,6 +31,10 @@ type TxnAddRes struct {
 	Hash database.Hash `json:"hash"`
 }
 
+type SyncRes struct {
+	Blocks []database.Block `json:"blocks"`
+}
+
 // writeErrRes adds the given error into the ResponseWriter
 func writeErrRes(w http.ResponseWriter, err error) {
 	jsonErrRes, _ := json.Marshal(ErrRes{err.Error()})

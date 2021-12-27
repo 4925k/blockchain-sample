@@ -46,9 +46,23 @@ func txnAddHandler(w http.ResponseWriter, r *http.Request, state *database.State
 	writeRes(w, TxnAddRes{hash})
 }
 
-// func syncHandler(w http.ResponseWriter, r http.Request, dataDir string) {
-// 	reqHash := r.URL.Query().Get(endpontSyncQueryKeyFromBlock)
+// syncHandler fetches newer block if present
+func syncHandler(w http.ResponseWriter, r *http.Request, dataDir string) {
+	//get target node's latest block hash
+	reqHash := r.URL.Query().Get(endpointSyncQueryKeyFromBlock)
 
-// 	hash := database.Hash{}
+	hash := database.Hash{}
+	err := hash.UnmarshalText([]byte(reqHash))
+	if err != nil {
+		writeErrRes(w, err)
+		return
+	}
 
-// }
+	blocks, err := database.GetBlocksAfter(hash, dataDir)
+	if err != nil {
+		writeErrRes(w, err)
+		return
+	}
+
+	writeRes(w, SyncRes{Blocks: blocks})
+}
