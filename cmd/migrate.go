@@ -24,7 +24,7 @@ var migrateCMD = func() *cobra.Command {
 
 			block0 := database.NewBlock(
 				database.Hash{},
-				state.NextBlockNumber(),
+				0,
 				uint64(time.Now().Unix()),
 				[]database.Txn{
 					database.NewTxn("dibek", "dibek", 3, ""),
