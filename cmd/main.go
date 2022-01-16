@@ -9,6 +9,7 @@ import (
 
 var flagDataDir = "dataDir"
 var flagPort = "port"
+var flagIP = "ip"
 
 func main() {
 	var paisaCMD = &cobra.Command{
@@ -18,7 +19,6 @@ func main() {
 	}
 
 	paisaCMD.AddCommand(runCmd())
-	paisaCMD.AddCommand(txnCMD())
 	paisaCMD.AddCommand(versionCMD)
 	paisaCMD.AddCommand(migrateCMD())
 	paisaCMD.AddCommand(balancesCMD())
