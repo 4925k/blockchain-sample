@@ -61,6 +61,8 @@ func (n *Node) Run() error {
 	defer state.Close()
 
 	n.state = state
+
+	//sync peer lists and blocks every minute
 	go n.sync(ctx)
 
 	http.HandleFunc("/balances/list", func(w http.ResponseWriter, r *http.Request) {

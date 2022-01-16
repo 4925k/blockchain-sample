@@ -43,7 +43,7 @@ func txnAddHandler(w http.ResponseWriter, r *http.Request, state *database.State
 	if err != nil {
 		writeErrRes(w, err)
 	}
-	writeRes(w, TxnAddRes{hash})
+	writeRes(w, TxnAddRes{Hash: hash})
 }
 
 // syncHandler fetches newer block if present
