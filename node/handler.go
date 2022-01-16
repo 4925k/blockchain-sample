@@ -2,7 +2,9 @@ package node
 
 import (
 	"blockchain-sample/database"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -65,4 +67,23 @@ func syncHandler(w http.ResponseWriter, r *http.Request, dataDir string) {
 	}
 
 	writeRes(w, SyncRes{Blocks: blocks})
+}
+
+func addPeerHandler(w http.ResponseWriter, r *http.Request, node *Node) {
+	ip := r.URL.Query().Get(endpointAddPeerQueryKeyIP)
+	port := r.URL.Query().Get(endpointAddPeerQueryKeyPort)
+
+	peerPort, err := strconv.ParseUint(port, 10, 32)
+	if err != nil {
+		writeErrRes(w, err)
+		return
+	}
+
+	peer := NewPeerNode(ip, peerPort, false, true)
+
+	node.AddPeer(*peer)
+
+	fmt.Printf("Peer %s was added into KnownPeers\n", peer.TcpAddress())
+
+	writeRes(w, AddPeerRes{true, ""})
 }

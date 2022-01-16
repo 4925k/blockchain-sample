@@ -108,8 +108,6 @@ func (s *State) AddBlock(b Block) (Hash, error) {
 		return Hash{}, err
 	}
 
-	fmt.Printf("Persisting new Block to disk:\n%s\n", blockFsJson)
-
 	_, err = s.dbFile.Write(append(blockFsJson, '\n'))
 	if err != nil {
 		return Hash{}, err
@@ -127,10 +125,12 @@ func (s *State) AddBlock(b Block) (Hash, error) {
 func applyBlock(b Block, s State) error {
 	nextExpectedBlockNumber := s.latestBlock.Header.Number + 1
 
+	// validate that the next block number increases by 1
 	if s.hasGenesisBlock && b.Header.Number != nextExpectedBlockNumber {
 		return fmt.Errorf("next expected block must be %d, not %d", nextExpectedBlockNumber, b.Header.Number)
 	}
 
+	// validate the incoming block parent hash equals the current hash
 	if s.hasGenesisBlock && s.latestBlock.Header.Number > 0 && !reflect.DeepEqual(b.Header.Parent, s.latestBlockHash) {
 		return fmt.Errorf("next block parent hash must be %x not %x", s.latestBlockHash, b.Header.Parent)
 	}
@@ -141,7 +141,7 @@ func applyBlock(b Block, s State) error {
 // applyTxns completes the given transactions on the state
 func applyTxns(txns []Txn, s *State) error {
 	for _, txn := range txns {
-		err := ApplyTxn(txn, s)
+		err := applyTxn(txn, s)
 		if err != nil {
 			return err
 		}
@@ -149,8 +149,8 @@ func applyTxns(txns []Txn, s *State) error {
 	return nil
 }
 
-// ApplyTxn completes the given transaction on the state
-func ApplyTxn(txn Txn, s *State) error {
+// applyTxn completes the given transaction on the state
+func applyTxn(txn Txn, s *State) error {
 	// check is txn is block reward
 	if txn.IsReward() {
 		s.Balances[txn.To] += txn.Value
@@ -190,7 +190,7 @@ func (s *State) NextBlockNumber() uint64 {
 	return s.LatestBlock().Header.Number + 1
 }
 
-// copy copies the
+// copy deep copies the current state
 func (s *State) copy() State {
 	c := State{}
 	c.hasGenesisBlock = s.hasGenesisBlock

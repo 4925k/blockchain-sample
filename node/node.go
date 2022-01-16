@@ -8,14 +8,21 @@ import (
 )
 
 const (
-	DefaultHttpPort               = 8080
-	endpointStatus                = "/node/status"
+	DefaultIP       = "127.0.0.1"
+	DefaultHttpPort = 8080
+	endpointStatus  = "/node/status"
+
 	endpointSync                  = "/node/sync"
 	endpointSyncQueryKeyFromBlock = "fromBlock"
+
+	endpointAddPeer             = "/node/peer"
+	endpointAddPeerQueryKeyIP   = "ip"
+	endpointAddPeerQueryKeyPort = "port"
 )
 
 type Node struct {
 	dataDir    string
+	ip         string
 	port       uint64
 	state      *database.State
 	knownPeers map[string]PeerNode
@@ -31,7 +38,7 @@ type PeerNode struct {
 	IP          string `json:"ip"`
 	Port        uint64 `json:"port"`
 	IsBootStrap bool   `json:"is_bootstrap"`
-	IsActive    bool   `json:"is_active"`
+	connected   bool   `json:"is_active"`
 }
 
 // NewPeerNode returns a new peer node
@@ -40,11 +47,12 @@ func NewPeerNode(ip string, port uint64, isbootstrap, isactive bool) *PeerNode {
 }
 
 // New returns a new node
-func New(dataDir string, port uint64, bootstrap PeerNode) *Node {
+func New(dataDir, ip string, port uint64, bootstrap PeerNode) *Node {
 	knownPeers := make(map[string]PeerNode)
 	knownPeers[bootstrap.TcpAddress()] = bootstrap
 	return &Node{
 		dataDir:    dataDir,
+		ip:         ip,
 		port:       port,
 		knownPeers: knownPeers,
 	}
@@ -53,7 +61,7 @@ func New(dataDir string, port uint64, bootstrap PeerNode) *Node {
 // Run starts the HTTP server and APIs
 func (n *Node) Run() error {
 	ctx := context.Background()
-	fmt.Printf("Listening on HTTP Port: %d\n", n.port)
+	fmt.Printf("Listening on HTTP Port: %s:%d\n", n.ip, n.port)
 	state, err := database.NewStateFromDisk(n.dataDir)
 	if err != nil {
 		return err
@@ -76,6 +84,9 @@ func (n *Node) Run() error {
 	})
 	http.HandleFunc(endpointSync, func(w http.ResponseWriter, r *http.Request) {
 		syncHandler(w, r, n.dataDir)
+	})
+	http.HandleFunc(endpointAddPeer, func(w http.ResponseWriter, r *http.Request) {
+		addPeerHandler(w, r, n)
 	})
 	return http.ListenAndServe(fmt.Sprintf(":%d", n.port), nil)
 

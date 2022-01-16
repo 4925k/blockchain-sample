@@ -2,6 +2,7 @@ package database
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -90,4 +91,10 @@ func GetBlocksAfter(blockHash Hash, dataDir string) ([]Block, error) {
 	}
 
 	return blocks, nil
+}
+
+func (h Hash) IsEmpty() bool {
+	emptyHash := Hash{}
+
+	return bytes.Equal(emptyHash[:], h[:])
 }

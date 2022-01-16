@@ -35,6 +35,11 @@ type SyncRes struct {
 	Blocks []database.Block `json:"blocks"`
 }
 
+type AddPeerRes struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+}
+
 // writeErrRes adds the given error into the ResponseWriter
 func writeErrRes(w http.ResponseWriter, err error) {
 	jsonErrRes, _ := json.Marshal(ErrRes{err.Error()})
