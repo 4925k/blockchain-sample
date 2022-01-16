@@ -32,7 +32,8 @@ var migrateCMD = func() *cobra.Command {
 				},
 			)
 
-			block0hash, err := state.AddBlock(block0)
+			state.AddBlock(block0)
+			block0hash, err := state.Persist()
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -52,7 +53,8 @@ var migrateCMD = func() *cobra.Command {
 				},
 			)
 
-			block1hash, err := state.AddBlock(block1)
+			state.AddBlock(block1)
+			block1hash, err := state.Persist()
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -67,7 +69,8 @@ var migrateCMD = func() *cobra.Command {
 				},
 			)
 
-			_, err = state.AddBlock(block2)
+			state.AddBlock(block2)
+			_, err = state.Persist()
 			if err != nil {
 				fmt.Println(err)
 				return
