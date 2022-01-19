@@ -56,12 +56,14 @@ func syncHandler(w http.ResponseWriter, r *http.Request, dataDir string) {
 	hash := database.Hash{}
 	err := hash.UnmarshalText([]byte(reqHash))
 	if err != nil {
+		fmt.Println("[DEBUG] unmarhsal error")
 		writeErrRes(w, err)
 		return
 	}
 
 	blocks, err := database.GetBlocksAfter(hash, dataDir)
 	if err != nil {
+		fmt.Println("[DEBUG] get blocks after")
 		writeErrRes(w, err)
 		return
 	}

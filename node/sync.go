@@ -30,7 +30,7 @@ func (n *Node) doSync() {
 			return
 		}
 
-		fmt.Printf("[+] Searching for new peers and their blocks: %s", peer.TcpAddress())
+		fmt.Printf("[+] Searching for new peers and their blocks: %s\n", peer.TcpAddress())
 		status, err := queryPeerStatus(peer)
 		if err != nil {
 			fmt.Println("[-] ", err)
