@@ -147,7 +147,7 @@ func queryPeerStatus(peer PeerNode) (StatusRes, error) {
 
 func fetchBlocksFromPeer(peer PeerNode, fromBlock database.Hash) ([]database.Block, error) {
 
-	url := fmt.Sprintf("http://%s%s?%s=%s", peer.TcpAddress(), endpointSync, endpointSyncQueryKeyFromBlock, fromBlock)
+	url := fmt.Sprintf("http://%s%s?%s=%x", peer.TcpAddress(), endpointSync, endpointSyncQueryKeyFromBlock, fromBlock)
 
 	res, err := http.Get(url)
 	if err != nil {
