@@ -16,6 +16,7 @@ func (n *Node) sync(ctx context.Context) error {
 	for {
 		select {
 		case <-ticker.C:
+			fmt.Println("[+] searching for new peers and blocks")
 			n.doSync()
 		case <-ctx.Done():
 			ticker.Stop()
@@ -29,23 +30,23 @@ func (n *Node) doSync() {
 			return
 		}
 
-		fmt.Printf("Searching for new peers and their blocks: %s", peer.TcpAddress())
+		fmt.Printf("[+] Searching for new peers and their blocks: %s", peer.TcpAddress())
 		status, err := queryPeerStatus(peer)
 		if err != nil {
-			fmt.Println("ERROR =>", err)
-			fmt.Printf("Peer %s was removed from KnownPeers", peer.TcpAddress())
+			fmt.Println("[-] ", err)
 			n.RemovePeer(peer)
+			fmt.Printf("[*] Peer %s was removed from known peers", peer.TcpAddress())
 			continue
 		}
 		err = n.joinKnownPeers(peer)
 		if err != nil {
-			fmt.Println("ERROR =>", err)
+			fmt.Println("[-] ", err)
 			continue
 		}
 
 		err = n.syncBlocks(peer, status)
 		if err != nil {
-			fmt.Println("ERROR =>", err)
+			fmt.Println("[-] ", err)
 			continue
 		}
 
@@ -145,7 +146,6 @@ func queryPeerStatus(peer PeerNode) (StatusRes, error) {
 }
 
 func fetchBlocksFromPeer(peer PeerNode, fromBlock database.Hash) ([]database.Block, error) {
-	fmt.Println("Importing Blocks from Peer %s\n", peer.TcpAddress())
 
 	url := fmt.Sprintf("http://%s%s?%s=%s", peer.TcpAddress(), endpointSync, endpointSyncQueryKeyFromBlock, fromBlock)
 
