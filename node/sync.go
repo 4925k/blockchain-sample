@@ -79,7 +79,7 @@ func (n *Node) syncBlocks(peer PeerNode, status StatusRes) error {
 		newBlockCount = 1
 	}
 
-	fmt.Printf("Found %d new blockd from %s\n", newBlockCount, peer.TcpAddress())
+	fmt.Printf("Found %d new blocks from %s\n", newBlockCount, peer.TcpAddress())
 
 	blocks, err := fetchBlocksFromPeer(peer, n.state.LatestBlockHash())
 	if err != nil {

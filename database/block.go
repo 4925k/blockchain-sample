@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"os"
+	"reflect"
 )
 
 type Hash [32]byte
@@ -63,6 +64,10 @@ func GetBlocksAfter(blockHash Hash, dataDir string) ([]Block, error) {
 	blocks := make([]Block, 0)
 	newBlock := false
 
+	if reflect.DeepEqual(blockHash, Hash{}) {
+		newBlock = true
+	}
+
 	// loop over blockchain
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -74,7 +79,7 @@ func GetBlocksAfter(blockHash Hash, dataDir string) ([]Block, error) {
 		var blockFs BlockFs
 		err = json.Unmarshal(scanner.Bytes(), &blockFs)
 		if err != nil {
-			return blocks, err
+			return nil, err
 		}
 
 		// if newBlock, add to blocks
